@@ -1,0 +1,28 @@
+# Entorno
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Datos y artefactos (versionados con DVC)
+data/raw/*
+data/processed/*
+artifacts/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Salidas de entrenamiento
+mlruns/
+mlartifacts/
+*.pth
+*.onnx
+
+# DVC
+.dvc/cache/
+
+# Secretos / misc
+.env
+*.log
+.DS_Store
