@@ -1,0 +1,5 @@
+outs:
+- md5: 41f51806846b6b567b8ae701a300a3de
+  size: 20640916
+  hash: md5
+  path: household_power_consumption.zip
