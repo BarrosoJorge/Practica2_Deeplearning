@@ -95,6 +95,8 @@ Para la comparación de los modelos de regresión se utilizarán:
 | **MSE** | Error Cuadrático Medio | Promedio de los errores al cuadrado; penaliza desviaciones grandes. |
 | **RMSE** | Raíz del Error Cuadrático Medio | Raíz cuadrada del MSE; expresado en las mismas unidades de la variable. |
 | **MAPE** | Error Porcentual Absoluto Medio | Porcentaje de desviación promedio con respecto al valor real. |
+| **WAPE** | Error Absoluto Ponderado por Volumen | $\frac{\sum \|e\|}{\sum \|y\|}$. Referencia porcentual honesta en series con consumo muy bajo, donde el MAPE se infla por divisiones entre bases minúsculas. |
+| **sMAPE** | MAPE Simétrico | $\frac{2\|e\|}{\|y\|+\|\hat{y}\|}$, acotada en $[0\%, 200\%]$. |
 
 La selección del mejor modelo se hará evaluando el rendimiento sobre el conjunto de **validación**, reservando el conjunto de **prueba** únicamente para la evaluación final sin sesgos.
 
@@ -109,11 +111,11 @@ sequenceDiagram
     participant Preproc as Módulo Preprocesamiento
     participant Modelo as Modelo Entrenado (RNN/LSTM)
 
-    Cliente->>Servidor: POST /predict (Últimos 7 días)
+    Cliente->>Servidor: POST /predict (últimas 24 h)
     Servidor->>Preproc: Normalización y formato de ventana
     Preproc->>Modelo: Array procesado
     Modelo-->>Servidor: Valor numérico predicho
-    Servidor-->>Cliente: JSON { "prediction": valor_siguiente_dia }
+    Servidor-->>Cliente: JSON { "prediction": valor_siguiente_hora }
 ```
 
 Se propone utilizar **FastAPI** para exponer un endpoint HTTP REST independiente (ej. `POST /predict`) capaz de procesar las peticiones de inferencia.
