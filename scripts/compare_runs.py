@@ -190,13 +190,18 @@ def plot_predictions(results, loaders, scaler, device, cfg, horizon=72):
 
 def register_best(results, cfg):
     """Registra el mejor modelo al Registry de MLflow (por val_loss)."""
+    import os
+
     import mlflow
     from mlflow.exceptions import MlflowException
 
     best = min(results, key=lambda r: r["val_loss"])
     best_run_id = _run_ids[best["run_name"]]
 
-    mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
+    # env var tiene prioridad (compose usa http://mlflow:5000)
+    mlflow.set_tracking_uri(
+        os.environ.get("MLFLOW_TRACKING_URI", cfg["mlflow"]["tracking_uri"]),
+    )
     client = mlflow.MlflowClient()
     name = cfg["mlflow"]["registry_name"]
 

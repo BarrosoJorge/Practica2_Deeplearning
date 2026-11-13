@@ -12,6 +12,7 @@ Test NO se toca en epoch: se evalua al final de cada run.
 
 import argparse
 import json
+import os
 import pathlib
 import random
 import sys
@@ -124,7 +125,10 @@ def train_one_arch(arch, cfg, quick, no_mlflow):
         )
 
     if not no_mlflow:
-        mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
+        # env var tiene prioridad (compose usa http://mlflow:5000)
+        mlflow.set_tracking_uri(
+            os.environ.get("MLFLOW_TRACKING_URI", cfg["mlflow"]["tracking_uri"]),
+        )
         mlflow.set_experiment(cfg["mlflow"]["experiment"])
 
     context = (
