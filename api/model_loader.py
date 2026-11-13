@@ -6,11 +6,27 @@ Orden de preferencia:
 """
 
 import pathlib
+import socket
+from urllib.parse import urlparse
 
 import mlflow
 from mlflow.tracking import MlflowClient
 
 CKPT_NAME = "best.pt"
+
+
+def _server_reachable(tracking_uri, timeout=3.0):
+    """TCP ping al host:port del tracking URI (evita reintentos largos de mlflow)."""
+    try:
+        parsed = urlparse(tracking_uri)
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        with socket.create_connection(
+            (parsed.hostname, port),
+            timeout=timeout,
+        ):
+            return True
+    except OSError:
+        return False
 
 
 def resolve_checkpoint(tracking_uri, registry_name, cache_dir, fallback=None):
@@ -21,33 +37,36 @@ def resolve_checkpoint(tracking_uri, registry_name, cache_dir, fallback=None):
     """
     cache_dir = pathlib.Path(cache_dir)
 
-    try:
-        client = MlflowClient(tracking_uri=tracking_uri)
-        versions = list(client.search_model_versions(f"name='{registry_name}'"))
-        if not versions:
-            raise LookupError("registry vacío")
+    if not _server_reachable(tracking_uri):
+        print(f"[model_loader] MLflow no alcanzable en {tracking_uri}; usando fallback")
+    else:
+        try:
+            client = MlflowClient(tracking_uri=tracking_uri)
+            versions = list(client.search_model_versions(f"name='{registry_name}'"))
+            if not versions:
+                raise LookupError("registry vacío")
 
-        latest = max(versions, key=lambda v: int(v.version))
-        dst = cache_dir / f"v{latest.version}"
+            latest = max(versions, key=lambda v: int(v.version))
+            dst = cache_dir / f"v{latest.version}"
 
-        candidates = list(dst.rglob(CKPT_NAME))
-        if not candidates:
-            uri = client.get_model_version_download_uri(
-                registry_name,
-                str(latest.version),
-            )
-            mlflow.artifacts.download_artifacts(
-                artifact_uri=uri,
-                dst_path=str(dst),
-                tracking_uri=tracking_uri,
-            )
             candidates = list(dst.rglob(CKPT_NAME))
             if not candidates:
-                raise FileNotFoundError(f"{CKPT_NAME} no está en el artefacto")
+                uri = client.get_model_version_download_uri(
+                    registry_name,
+                    str(latest.version),
+                )
+                mlflow.artifacts.download_artifacts(
+                    artifact_uri=uri,
+                    dst_path=str(dst),
+                    tracking_uri=tracking_uri,
+                )
+                candidates = list(dst.rglob(CKPT_NAME))
+                if not candidates:
+                    raise FileNotFoundError(f"{CKPT_NAME} no está en el artefacto")
 
-        return candidates[0], f"{registry_name} v{latest.version} (MLflow Registry)"
-    except Exception as exc:
-        print(f"[model_loader] Registry no disponible ({exc}); usando fallback")
+            return candidates[0], f"{registry_name} v{latest.version} (MLflow Registry)"
+        except Exception as exc:
+            print(f"[model_loader] Registry no disponible ({exc}); usando fallback")
 
     if fallback and pathlib.Path(fallback).exists():
         return pathlib.Path(fallback), f"{fallback} (checkpoint local)"

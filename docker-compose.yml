@@ -11,6 +11,12 @@ services:
       - "5000:5000"
     volumes:
       - /home/laviria/mlflow-P2_DL:/mlflow
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/health')\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
     restart: unless-stopped
 
   train:
@@ -20,7 +26,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.train
     depends_on:
-      - mlflow
+      mlflow:
+        condition: service_healthy
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       UV_PROJECT_ENVIRONMENT: /env
@@ -38,7 +45,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.api
     depends_on:
-      - mlflow
+      mlflow:
+        condition: service_healthy
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       UV_PROJECT_ENVIRONMENT: /env

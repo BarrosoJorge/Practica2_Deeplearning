@@ -3,6 +3,25 @@
 Todos los comandos se ejecutan desde la raíz del proyecto (`P2_DL/`).
 Estado normal: los contenedores **apagados**; se levantan solo al usarlos.
 
+## Atajos: `./dev.sh` (equivalente ejecutable de esta chuleta)
+
+```bash
+./dev.sh lint             # pre-commit
+./dev.sh test             # las 3 pruebas (pytest)
+./dev.sh train-quick      # entrenamiento EN CONTENEDOR ~2 min (demo)
+./dev.sh train-container  # entrenamiento completo EN CONTENEDOR
+./dev.sh train-local      # entrenamiento local (uv run + GPU host)
+./dev.sh compare          # comparativa + registro del mejor modelo
+./dev.sh up / down        # levantar / apagar MLflow + API
+./dev.sh demo             # POST /predict con la ventana real del test set
+./dev.sh commit "msg"     # gate: pre-commit + pruebas -> commit
+./dev.sh push             # publicar a GitHub
+./dev.sh build            # construir imágenes docker
+./dev.sh clean            # liberar espacio (cache de build, sin tocar imágenes)
+./dev.sh status           # contenedores, disco y docker
+./dev.sh help             # ayuda completa
+```
+
 ---
 
 ## 0. Estado de contenedores

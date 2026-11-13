@@ -113,3 +113,35 @@ def test_predict_valor_nan_rechazado(client):
     raw = json.dumps({"series": default_series()[:-1] + [None]})
     resp = client.post("/predict", content=raw, headers={"content-type": "application/json"})
     assert resp.status_code == 422
+
+
+def test_model_loader_fallback_sin_mlflow(tmp_path):
+    """MLflow apagado (puerto cerrado) -> fallback local sin colgarse."""
+    from api.model_loader import resolve_checkpoint
+
+    ckpt = tmp_path / "best.pt"
+    model = create_model(
+        "lstm",
+        {"model": {"hidden_size": 4, "num_layers": 1, "dropout": 0.0}},
+    )
+    torch.save(
+        {
+            "arch": "lstm",
+            "state_dict": model.state_dict(),
+            "best_val_loss": 999.0,
+            "config": {
+                "data": {"window": WINDOW},
+                "model": {"hidden_size": 4, "num_layers": 1, "dropout": 0.0},
+            },
+            "device": "cpu",
+        },
+        ckpt,
+    )
+    path, source = resolve_checkpoint(
+        tracking_uri="http://127.0.0.1:59999",  # puerto cerrado
+        registry_name="p2dl-forecasting",
+        cache_dir=tmp_path / "cache",
+        fallback=ckpt,
+    )
+    assert path == ckpt
+    assert "checkpoint local" in source
