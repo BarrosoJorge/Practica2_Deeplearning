@@ -315,6 +315,7 @@ def main():
             },
             indent=2,
         )
+        + "\n"  # end-of-file-fixer exige newline final
     )
 
     print("\n" + markdown_table(rows))

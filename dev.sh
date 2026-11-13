@@ -83,7 +83,8 @@ cmd_demo() {
 cmd_commit() {
   [ $# -ge 1 ] || die "uso: ./dev.sh commit \"mensaje del commit\""
   banner "gate de pre-commit + pruebas antes del commit"
-  cmd_lint
+  # si un hook auto-corrige archivos (whitespace/newline), reintenta 1 vez
+  cmd_lint || { echo "hooks auto-corrigieron archivos; reintentando..."; cmd_lint; }
   cmd_test
   banner "staging + commit: $1"
   git add -A

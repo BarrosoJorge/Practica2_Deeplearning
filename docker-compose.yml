@@ -31,6 +31,7 @@ services:
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       UV_PROJECT_ENVIRONMENT: /env
+      GIT_PYTHON_REFRESH: quiet
     gpus: all
     volumes:
       - .:/app
@@ -50,6 +51,7 @@ services:
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       UV_PROJECT_ENVIRONMENT: /env
+      GIT_PYTHON_REFRESH: quiet
     ports:
       - "8000:8000"
     volumes:

@@ -69,7 +69,7 @@ uv run pytest tests/test_inference.py -q     # prueba 3: servidor de inferencia
 
 ## 4. Entrenamiento
 
-**Local (rápido, usa .venv con CUDA):**
+**Local (rápido, usar .venv con CUDA):**
 
 ```bash
 docker compose up -d mlflow                  # el tracking necesita el server

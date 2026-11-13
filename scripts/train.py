@@ -71,7 +71,7 @@ def build_make_loaders(cfg, quick):
     return loaders, device
 
 
-def train_one_arch(arch, cfg, quick, no_mlflow):
+def train_one_arch(arch, cfg, quick, no_mlflow, epochs_override=None):
     import mlflow
 
     data_cfg = cfg["data"]
@@ -96,6 +96,8 @@ def train_one_arch(arch, cfg, quick, no_mlflow):
     epochs_cfg = cfg["train"]["epochs"]
     if quick:
         epochs_cfg = cfg["train"]["quick"]["epochs"]
+    if epochs_override:
+        epochs_cfg = epochs_override
 
     model = create_model(arch, cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -259,6 +261,12 @@ def main():
     parser.add_argument("--config", default="configs/train.yaml")
     parser.add_argument("--archs", nargs="*", choices=["rnn", "lstm"])
     parser.add_argument("--quick", action="store_true", help="sanity: 2 epocas + subset")
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=None,
+        help="override del numero de epocas (con o sin --quick)",
+    )
     parser.add_argument("--no-mlflow", action="store_true", help="sin tracking")
     args = parser.parse_args()
 
@@ -267,7 +275,9 @@ def main():
 
     archs = args.archs if args.archs else cfg["archs"]
 
-    results = [train_one_arch(arch, cfg, args.quick, args.no_mlflow) for arch in archs]
+    results = [
+        train_one_arch(arch, cfg, args.quick, args.no_mlflow, args.epochs) for arch in archs
+    ]
 
     print("\n=== resumen ===")
     for res in results:
