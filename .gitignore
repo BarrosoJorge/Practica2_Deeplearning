@@ -27,3 +27,9 @@ mlartifacts/
 .env
 *.log
 .DS_Store
+
+# Checkpoints de entrenamiento (persisten vía MLflow Registry)
+artifacts/checkpoints/
+
+# Cache de descargas del MLflow Model Registry (reproducible al arrancar la API)
+artifacts/registry/

@@ -1,0 +1,50 @@
+services:
+  mlflow:
+    container_name: p2dl-mlflow
+    image: ghcr.io/mlflow/mlflow:latest
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/mlartifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - /home/laviria/mlflow-P2_DL:/mlflow
+    restart: unless-stopped
+
+  train:
+    container_name: p2dl-train
+    image: p2dl-train:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.train
+    depends_on:
+      - mlflow
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      UV_PROJECT_ENVIRONMENT: /env
+    gpus: all
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["/env/bin/python", "scripts/train.py", "--config", "configs/train.yaml"]
+    profiles: ["dev"]
+
+  api:
+    container_name: p2dl-api
+    image: p2dl-api:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    depends_on:
+      - mlflow
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      UV_PROJECT_ENVIRONMENT: /env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["/env/bin/uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    profiles: ["inference"]

@@ -54,8 +54,14 @@ def get_loaders(
     data_dir,
     batch_size=64,
     window=WINDOW,
+    shuffle_train=False,
 ):
-    """DataLoaders de train/val/test a partir de los .npy versionados."""
+    """DataLoaders de train/val/test a partir de los .npy versionados.
+
+    Con shuffle_train=True mezcla las ventana de entrenamiento (los pares
+    X/y siguen siendo independientes; el orden temporal vive dentro de
+    cada ventana).
+    """
     data_dir = Path(data_dir)
     splits = load_processed(data_dir)
 
@@ -68,7 +74,7 @@ def get_loaders(
         loaders[name] = DataLoader(
             dataset,
             batch_size=batch_size,
-            shuffle=False,
+            shuffle=shuffle_train if name == "train" else False,
         )
 
     scaler = None
